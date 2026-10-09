@@ -1,28 +1,45 @@
-#
-# Usage from command line:
-# curl http://127.0.0.1:5000 -X POST -H "Content-Type: application/json" -d '{"bathrooms": "2", "bedrooms": "3", "sqft_living": "1800", "sqft_lot": "2200", "floors": "1", "waterfront": "1", "condition": "3"}'
-#
-import requests
+from flask import Flask, request
+import pandas as pd
+import pickle
 
-def make_request():
 
-    url = "http://127.0.0.1:5000"
+app = Flask(__name__)
 
-    data = {
-        "bathrooms": "2",
-        "bedrooms": "3",
-        "sqft_living": "1800",
-        "sqft_lot": "2200",
-        "floors": "1",
-        "waterfront": "1",
-        "condition": "3",
+
+FEATURES = [
+    "bathrooms",
+    "bedrooms",
+    "sqft_living",
+    "sqft_lot",
+    "floors",
+    "waterfront",
+    "condition",
+]
+
+
+@app.route("/", methods=["POST"])
+def index():
+
+    args = request.json
+
+    filt_args = {
+        key: [int(args[key])]
+        for key in FEATURES
     }
 
-    response = requests.post(url, json=data, timeout=5)
+    df = pd.DataFrame.from_dict(filt_args)
 
-    print(response.text)
+    with open(
+        "PRE_07_deployment/submission/house_predictor.pkl",
+        "rb"
+    ) as file:
+        loaded_model = pickle.load(file)
+
+    prediction = loaded_model.predict(df)
+
+    return str(prediction[0])
+
 
 if __name__ == "__main__":
-    make_request()
-    
+    app.run(debug=True)
     
