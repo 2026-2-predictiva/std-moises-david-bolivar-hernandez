@@ -1,45 +1,23 @@
-from flask import Flask, request
-import pandas as pd
-import pickle
+import requests
 
 
-app = Flask(__name__)
+def make_request():
+    url = "http://127.0.0.1:5000"
 
-
-FEATURES = [
-    "bathrooms",
-    "bedrooms",
-    "sqft_living",
-    "sqft_lot",
-    "floors",
-    "waterfront",
-    "condition",
-]
-
-
-@app.route("/", methods=["POST"])
-def index():
-
-    args = request.json
-
-    filt_args = {
-        key: [int(args[key])]
-        for key in FEATURES
+    data = {
+        "bathrooms": "2",
+        "bedrooms": "3",
+        "sqft_living": "1800",
+        "sqft_lot": "2200",
+        "floors": "1",
+        "waterfront": "1",
+        "condition": "3",
     }
 
-    df = pd.DataFrame.from_dict(filt_args)
+    response = requests.post(url, json=data, timeout=5)
 
-    with open(
-        "PRE_07_deployment/submission/house_predictor.pkl",
-        "rb"
-    ) as file:
-        loaded_model = pickle.load(file)
-
-    prediction = loaded_model.predict(df)
-
-    return str(prediction[0])
+    print(response.text)
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
-    
+    make_request()
